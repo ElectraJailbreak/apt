@@ -37,7 +37,7 @@ file(GLOB_RECURSE headers "*.h")
 
 # Create a library using the C++ files
 add_library(apt-pkg SHARED ${library})
-add_dependencies(apt-pkg apt-pkg-versionscript)
+#add_dependencies(apt-pkg apt-pkg-versionscript)
 # Link the library and set the SONAME
 target_include_directories(apt-pkg
                            PRIVATE ${ZLIB_INCLUDE_DIRS}

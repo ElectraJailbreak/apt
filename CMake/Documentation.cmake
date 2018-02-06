@@ -34,6 +34,8 @@ find_path(DOCBOOK_XSL manpages/docbook.xsl
           /usr/share/xml/docbook/xsl-stylesheets
          # Fedora
          /usr/share/sgml/docbook/xsl-stylesheets
+	 #Brew
+	 /usr/local/Cellar/docbook-xsl/1.79.1/docbook-xsl/
          # Fink
          ${CMAKE_INSTALL_PREFIX}/share/xml/xsl/docbook-xsl
          # FreeBSD
@@ -88,7 +90,7 @@ endfunction()
 
 # Process one document
 function(po4a_one stamp_out out full_document language deps)
-    path_join(full_path "${CMAKE_CURRENT_SOURCE_DIR}" "${full_document}")
+	path_join(full_path "${CMAKE_CURRENT_SOURCE_DIR}" "${full_document}")
     po4a_components(document _ section ext "${full_document}")
 
     # Calculate target file name
@@ -266,7 +268,7 @@ function(add_docbook target)
 
     foreach(document ${DOC_DOCUMENTS})
         foreach(lang ${DOC_LINGUAS})
-            po4a_one(po4a_stamp po4a_out ${document} "${lang}" "${DOC_DEPENDS}")
+	    po4a_one(po4a_stamp po4a_out ${document} "${lang}" "${DOC_DEPENDS}")
             xsltproc_one(STAMP_OUT xslt_stamp
                          STAMP ${po4a_stamp}
                          FULL_DOCUMENT ${po4a_out}

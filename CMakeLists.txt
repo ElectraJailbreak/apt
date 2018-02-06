@@ -10,15 +10,18 @@ include_directories(${PROJECT_BINARY_DIR}/include)
 
 enable_testing()
 
-option(WITH_DOC "Build documentation." OFF)
+option(WITH_DOC "Build documentation." ON)
 option(USE_NLS "Localisation support." ON)
+
+INCLUDE_DIRECTORIES(/usr/src/skel/usr/include)
+LINK_DIRECTORIES(/usr/src/skel/usr/lib)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMake")
 
 # Add coverage target
 set(CMAKE_CXX_FLAGS_COVERAGE "-g -fprofile-arcs -ftest-coverage")
-set(CMAKE_EXE_LINKER_FLAGS_COVERAGE "-lgcov")
-set(CMAKE_SHARED_LINKER_FLAGS_COVERAGE "-lgcov")
+set(CMAKE_EXE_LINKER_FLAGS_COVERAGE "-lgcov -lSystem")
+set(CMAKE_SHARED_LINKER_FLAGS_COVERAGE "-lgcov -lSystem")
 
 # Work around bug in GNUInstallDirs
 if (EXISTS "/etc/debian_version")
@@ -211,6 +214,11 @@ add_subdirectory(apt-private)
 add_subdirectory(apt-inst)
 add_subdirectory(cmdline)
 add_subdirectory(completions)
+
+if (WITH_DOC)
+add_subdirectory(doc)
+endif()
+
 add_subdirectory(dselect)
 add_subdirectory(ftparchive)
 add_subdirectory(methods)

@@ -66,16 +66,16 @@ endfunction()
 
 # Generates a simple version script versioning everything with current SOVERSION
 function(add_version_script target)
-    get_target_property(soversion ${target} SOVERSION)
-    set(script "${CMAKE_CURRENT_BINARY_DIR}/${target}.versionscript")
-    string(REPLACE "-" "" name "${target}_${soversion}")
-    string(TOUPPER "${name}" name)
-    add_custom_command(OUTPUT "${script}"
-                       COMMAND echo "${name} {global: *; };" > "${script}"
-                       VERBATIM )
-    add_custom_target(${target}-versionscript DEPENDS "${script}")
-    target_link_libraries(${target} PRIVATE -Wl,-version-script="${script}")
-    add_dependencies(${target} ${target}-versionscript)
+	#get_target_property(soversion ${target} SOVERSION)
+    	#set(script "${CMAKE_CURRENT_BINARY_DIR}/${target}.versionscript")
+    	#string(REPLACE "-" "" name "${target}_${soversion}")
+    	#string(TOUPPER "${name}" name)
+    	#add_custom_command(OUTPUT "${script}"
+    	#                   COMMAND echo "${name} {global: *; };" > "${script}"
+    	#                   VERBATIM )
+    	#add_custom_target(${target}-versionscript DEPENDS "${script}")
+    	#target_link_libraries(${target} PRIVATE -Wl,-version-script="${script}")
+    	#add_dependencies(${target} ${target}-versionscript)
 endfunction()
 
 function(path_join out path1 path2)
