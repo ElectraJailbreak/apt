@@ -92,7 +92,7 @@ void ExecGPGV(std::string const &File, std::string const &FileGPG,
    #define EINTERNAL 111
    std::string const aptkey = _config->Find("Dir::Bin::apt-key", CMAKE_INSTALL_FULL_BINDIR "/apt-key");
 
-   bool const Debug = _config->FindB("Debug::Acquire::gpgv", false);
+    bool const Debug =  _config->FindB("Debug::Acquire::gpgv", false);
    struct exiter {
       std::vector<const char *> files;
       void operator ()(int code) APT_NORETURN {
@@ -103,8 +103,9 @@ void ExecGPGV(std::string const &File, std::string const &FileGPG,
 
 
    std::vector<const char *> Args;
-   Args.reserve(10);
+   Args.reserve(11);
 
+   Args.push_back("/bin/sh");
    Args.push_back(aptkey.c_str());
    Args.push_back("--quiet");
    Args.push_back("--readonly");
@@ -214,6 +215,21 @@ void ExecGPGV(std::string const &File, std::string const &FileGPG,
 
    Args.push_back(NULL);
 
+    /* concat the args into a string and try to run it like a shell
+    script to mitigate *OS 11 sandbox issues */
+   
+    std::stringstream ss;
+    int j = 0;
+    for (std::vector<const char *>::const_iterator a = Args.begin(); *a != NULL; ++a)
+    {
+        if(j != 0)
+            ss << " ";
+        ss << *a;
+        j++;
+    }
+    
+    std::string ArgString = ss.str();
+    
    if (Debug == true)
    {
       std::clog << "Preparing to exec: ";
@@ -238,8 +254,8 @@ void ExecGPGV(std::string const &File, std::string const &FileGPG,
       putenv((char *)"LC_ALL=");
       putenv((char *)"LC_MESSAGES=");
    }
-
-
+    
+    
    // We have created tempfiles we have to clean up
    // and we do an additional check, so fork yet another time …
    pid_t pid = ExecFork();
@@ -251,35 +267,9 @@ void ExecGPGV(std::string const &File, std::string const &FileGPG,
    {
       if (statusfd != -1)
 	 dup2(fd[1], statusfd);
-      //I don't really C++, so I hope this is the best way to make a std::vector into a space separated C-string.
-      char *fullCmd = NULL;
-      char *tmpCmd = NULL;
-      bool firstTime = true;
-      int size = 0;
-      for (std::vector<const char *>::const_iterator a = Args.begin(); a != Args.end(); ++a) {
-	      size = strlen(*a) + 1; //Plus one for \0
-	      if (fullCmd != NULL) {
-		 size += strlen(fullCmd) + 1; //Plus one for space
-		 if (tmpCmd != NULL)
-		    free(tmpCmd);
-	         tmpCmd = (char *)malloc(sizeof(char) * (strlen(fullCmd) + 1));
-		 strcpy(tmpCmd, fullCmd);
-		 free(fullCmd);
-	      }
-	      fullCmd = (char *)malloc(sizeof(char) * size);
-	      if (tmpCmd == NULL)
-	         strcpy(fullCmd, *a);
-	      else
-	         sprintf(fullCmd, "%s %s\0", tmpCmd, *a);
-      }
-      if (tmpCmd != NULL)
-	      free(tmpCmd);
-      if (fullCmd != NULL) {
-	      RunCmd(fullCmd);
-	      free(fullCmd);
-      }
+       execlp("sh", "sh", "-c", ArgString.c_str(), NULL); //run as a shell script instead
       //execvp(Args[0], (char **) &Args[0]);
-      apt_error(std::cerr, statusfd, fd, "Couldn't execute %s to check %s", Args[0], File.c_str());
+       apt_error(std::cerr, statusfd, fd, "Couldn't execute %s to check %s", Args[0], File.c_str());
       local_exit(EINTERNAL);
    }
 
