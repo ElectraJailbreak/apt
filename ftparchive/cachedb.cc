@@ -22,6 +22,7 @@
 #include <apt-pkg/debfile.h>
 #include <apt-pkg/gpgv.h>
 #include <apt-pkg/hashes.h>
+#include <apt-pkg/missing.h>
 
 #include <netinet/in.h>       // htonl, etc
 #include <ctype.h>

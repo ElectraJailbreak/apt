@@ -12,6 +12,7 @@
 
 #include <netinet/in.h>
 #include <arpa/nameser.h>
+#include <apt-pkg/nameser_compat.h>
 #include <resolv.h>
 #include <time.h>
 

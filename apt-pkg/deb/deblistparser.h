@@ -52,6 +52,8 @@ class APT_HIDDEN debListParser : public pkgCacheListParser
    pkgTagSection Section;
    map_filesize_t iOffset;
 
+   std::string Arch;
+
    virtual bool ParseStatus(pkgCache::PkgIterator &Pkg,pkgCache::VerIterator &Ver);
    bool ParseDepends(pkgCache::VerIterator &Ver, pkgTagSection::Key Key,
 		     unsigned int Type);

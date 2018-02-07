@@ -17,6 +17,8 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
+#define st_mtim st_mtimespec
+
 #include <apt-pkg/fileutl.h>
 #include <apt-pkg/hashes.h>
 #include "byhash.h"

@@ -14,6 +14,7 @@
 #include <string.h>
 #include <string>
 #include <apt-pkg/macros.h>
+#include <apt-pkg/missing.h>
 
 namespace APT {
 

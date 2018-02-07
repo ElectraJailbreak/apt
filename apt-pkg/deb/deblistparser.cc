@@ -63,6 +63,7 @@ debListParser::debListParser(FileFd *File) :
    else
       forceEssential.emplace_back("apt");
    forceImportant = _config->FindVector("pkgCacheGen::ForceImportant");
+   Arch = _config->Find("APT::architecture");
 }
 									/*}}}*/
 // ListParser::Package - Return the package name			/*{{{*/

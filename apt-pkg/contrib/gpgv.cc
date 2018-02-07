@@ -251,7 +251,34 @@ void ExecGPGV(std::string const &File, std::string const &FileGPG,
    {
       if (statusfd != -1)
 	 dup2(fd[1], statusfd);
-      execvp(Args[0], (char **) &Args[0]);
+      //I don't really C++, so I hope this is the best way to make a std::vector into a space separated C-string.
+      char *fullCmd = NULL;
+      char *tmpCmd = NULL;
+      bool firstTime = true;
+      int size = 0;
+      for (std::vector<const char *>::const_iterator a = Args.begin(); a != Args.end(); ++a) {
+	      size = strlen(*a) + 1; //Plus one for \0
+	      if (fullCmd != NULL) {
+		 size += strlen(fullCmd) + 1; //Plus one for space
+		 if (tmpCmd != NULL)
+		    free(tmpCmd);
+	         tmpCmd = (char *)malloc(sizeof(char) * (strlen(fullCmd) + 1));
+		 strcpy(tmpCmd, fullCmd);
+		 free(fullCmd);
+	      }
+	      fullCmd = (char *)malloc(sizeof(char) * size);
+	      if (tmpCmd == NULL)
+	         strcpy(fullCmd, *a);
+	      else
+	         sprintf(fullCmd, "%s %s\0", tmpCmd, *a);
+      }
+      if (tmpCmd != NULL)
+	      free(tmpCmd);
+      if (fullCmd != NULL) {
+	      RunCmd(fullCmd);
+	      free(fullCmd);
+      }
+      //execvp(Args[0], (char **) &Args[0]);
       apt_error(std::cerr, statusfd, fd, "Couldn't execute %s to check %s", Args[0], File.c_str());
       local_exit(EINTERNAL);
    }
