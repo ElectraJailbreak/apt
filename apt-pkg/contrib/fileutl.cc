@@ -180,7 +180,7 @@ static char *searchpath(const char *binaryname){
             strcpy(foundpath, binaryname);
             return foundpath;
         } else {
-	    return NULL
+	    return NULL;
 	}
     }
     
