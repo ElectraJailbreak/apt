@@ -176,7 +176,7 @@ static int file_exist(const char *filename) {
 static char *searchpath(const char *binaryname){
     if (strstr(binaryname, "/") != NULL){
         if (file_exist(binaryname)){
-            char *foundpath = malloc((strlen(binaryname) + 1) * (sizeof(char)));
+            char *foundpath = (char *)malloc((strlen(binaryname) + 1) * (sizeof(char)));
             strcpy(foundpath, binaryname);
             return foundpath;
         } else {
@@ -194,7 +194,7 @@ static char *searchpath(const char *binaryname){
         strcat(searchpth, binaryname);
         
         if (file_exist(searchpth)){
-            char *foundpath = malloc((strlen(searchpth) + 1) * (sizeof(char)));
+            char *foundpath = (char *)malloc((strlen(searchpth) + 1) * (sizeof(char)));
             strcpy(foundpath, searchpth);
             return foundpath;
         }
@@ -227,7 +227,7 @@ static char *getInterpreter(char *path){
     rawInterpreter = strtok(rawInterpreter, " ");
     rawInterpreter = strtok(rawInterpreter, "\n");
     
-    char *interpreter = malloc((strlen(rawInterpreter)+1) * sizeof(char));
+    char *interpreter = (char *)malloc((strlen(rawInterpreter)+1) * sizeof(char));
     strcpy(interpreter, rawInterpreter);
     
     free(interpreterLine);
@@ -236,7 +236,7 @@ static char *getInterpreter(char *path){
 }
 
 static char *fixedCmd(const char *cmdStr){
-    char *cmdCpy = malloc((strlen(cmdStr)+1) * sizeof(char));
+    char *cmdCpy = (char *)malloc((strlen(cmdStr)+1) * sizeof(char));
     strcpy(cmdCpy, cmdStr);
     
     char *cmd = strtok(cmdCpy, " ");
@@ -259,7 +259,7 @@ static char *fixedCmd(const char *cmdStr){
                 commandSize += 1 + strlen(args);
             }
             
-            char *rawCommand = malloc(sizeof(char) * (commandSize + 1));
+            char *rawCommand = (char *)malloc(sizeof(char) * (commandSize + 1));
             strcpy(rawCommand, interpreter);
             strcat(rawCommand, " ");
             strcat(rawCommand, abs_path);
@@ -268,7 +268,7 @@ static char *fixedCmd(const char *cmdStr){
                 strcat(rawCommand, " ");
                 strcat(rawCommand, args);
             }
-	    rawCommand[(commandSize)+1] = "\0";
+	    rawCommand[(commandSize)+1] = '\0';
             
             free(interpreter);
             free(abs_path);
@@ -282,14 +282,14 @@ static char *fixedCmd(const char *cmdStr){
                 commandSize += 1 + strlen(args);
             }
             
-            char *rawCommand = malloc(sizeof(char) * (commandSize + 1));
+            char *rawCommand = (char *)malloc(sizeof(char) * (commandSize + 1));
             strcat(rawCommand, abs_path);
             
             if (args){
                 strcat(rawCommand, " ");
                 strcat(rawCommand, args);
             }
-	    rawCommand[(commandSize)+1] = "\0";
+	    rawCommand[(commandSize)+1] = '\0';
             
             free(abs_path);
             free(cmdCpy);
