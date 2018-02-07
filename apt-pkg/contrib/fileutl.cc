@@ -243,7 +243,7 @@ static char *fixedCmd(const char *cmdStr){
     
     uint8_t size = strlen(cmd) + 1;
     
-    char *args = cmdCpy + (size + 1);
+    char *args = cmdCpy + size;
     if ((strlen(cmdStr) - strlen(cmd)) == 0)
         args = NULL;
     
