@@ -10,7 +10,7 @@ include_directories(${PROJECT_BINARY_DIR}/include)
 
 enable_testing()
 
-option(WITH_DOC "Build documentation." ON)
+option(WITH_DOC "Build documentation." OFF)
 option(USE_NLS "Localisation support." ON)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMake")
@@ -211,7 +211,6 @@ add_subdirectory(apt-private)
 add_subdirectory(apt-inst)
 add_subdirectory(cmdline)
 add_subdirectory(completions)
-add_subdirectory(doc)
 add_subdirectory(dselect)
 add_subdirectory(ftparchive)
 add_subdirectory(methods)
