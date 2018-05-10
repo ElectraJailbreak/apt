@@ -14,7 +14,7 @@
 
 static void callsystem(std::string const &call)
 {
-   auto ret = system(call.c_str());
+   auto ret = RunCmd(call.c_str());
    if (WIFEXITED(ret) == false || WEXITSTATUS(ret) != 0)
       _error->Error("Calling %s failed!", call.c_str());
 }
