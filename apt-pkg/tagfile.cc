@@ -622,13 +622,6 @@ void pkgTagSection::Trim()
    for (; Stop > Section + 2 && (Stop[-2] == '\n' || Stop[-2] == '\r'); Stop--);
 }
 									/*}}}*/
-// TagSection::Trim - Trim off any trailing garbage			/*{{{*/
-// ---------------------------------------------------------------------
-/* There should be exactly 1 newline at the end of the buffer, no more. */
-void pkgTagSection::Trim()
-{
-   for (; Stop > Section + 2 && (Stop[-2] == '\n' || Stop[-2] == '\r'); Stop--);
-}
 
 // TagSection::Exists - return True if a tag exists			/*{{{*/
 bool pkgTagSection::Exists(StringView Tag) const
