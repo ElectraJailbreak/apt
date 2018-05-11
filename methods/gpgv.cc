@@ -67,7 +67,7 @@ struct Digest {
 static constexpr Digest Digests[] = {
    {Digest::State::Untrusted, "Invalid digest"},
    {Digest::State::Untrusted, "MD5"},
-   {Digest::State::Untrusted, "SHA1"},
+   {Digest::State::Weak, "SHA1"},
    {Digest::State::Untrusted, "RIPE-MD/160"},
    {Digest::State::Trusted, "Reserved digest"},
    {Digest::State::Trusted, "Reserved digest"},
@@ -214,6 +214,13 @@ string GPGVMethod::VerifyGetSigners(const char *file, const char *outfile,
          auto const sig = tokens[0];
          // Reject weak digest algorithms
          Digest digest = FindDigest(tokens[7]);
+         if (sig == "CFC100B9AA5CDC6430F2E9B5AA011AC1718BABDF" || //ZodTTD
+            sig == "EB22AD483B83E9A7460D86F387F92E166197E890" || //ModMyi
+            sig == "A9C96A37115894A23B894107694D17D38764B4F4"){ //BigBoss
+            if (tokens[7] == "2"){
+               digest = {Digest::State::Trusted, "SHA1"};
+            }
+         }
          switch (digest.getState()) {
          case Digest::State::Weak:
             // Treat them like an expired key: For that a message about expiry
