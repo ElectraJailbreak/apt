@@ -442,17 +442,17 @@ bool debReleaseIndex::Load(std::string const &Filename, std::string * const Erro
    }
 
    bool AuthPossible = false;
-   if(FoundHashSum == false)
+   /*if(FoundHashSum == false)
       _error->Warning(_("No Hash entry in Release file %s"), Filename.c_str());
    else if(FoundStrongHashSum == false)
       _error->Warning(_("No Hash entry in Release file %s which is considered strong enough for security purposes"), Filename.c_str());
-   else
+   else*/
+   if (FoundHashSum && FoundStrongHashSum)
       AuthPossible = true;
 
    std::string const StrDate = Section.FindS("Date");
    if (RFC1123StrToTime(StrDate.c_str(), Date) == false)
    {
-      _error->Warning( _("Invalid '%s' entry in Release file %s"), "Date", Filename.c_str());
       Date = 0;
    }
 
@@ -464,6 +464,8 @@ bool debReleaseIndex::Load(std::string const &Filename, std::string * const Erro
 
    if (CheckValidUntil == true)
    {
+   	  if (Date == 0)
+   	  	_error->Warning( _("Invalid '%s' entry in Release file %s"), "Date", Filename.c_str());
       std::string const Label = Section.FindS("Label");
       std::string const StrValidUntil = Section.FindS("Valid-Until");
 

@@ -141,8 +141,6 @@ APT_PURE bool HashString::usable() const				/*{{{*/
 {
    return (
       (Type != "Checksum-FileSize") &&
-      (Type != "MD5Sum") &&
-      (Type != "SHA1") &&
       !IsConfigured(Type.c_str(), "Untrusted")
    );
 }

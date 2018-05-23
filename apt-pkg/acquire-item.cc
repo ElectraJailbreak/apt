@@ -266,7 +266,7 @@ static bool APT_NONNULL(3, 4, 5) AllowInsecureRepositories(InsecureType const ms
 
    if (TargetIsAllowedToBe(TransactionManager->Target, msg) == true)
    {
-      MessageInsecureRepository(false, msgstr, repo);
+      //MessageInsecureRepository(false, msgstr, repo);
       return true;
    }
 
@@ -1412,7 +1412,7 @@ void pkgAcqMetaClearSig::QueueIndexes(bool const verify)			/*{{{*/
 	 if (TransactionManager->MetaIndexParser->Exists(Target.MetaKey) == false)
 	 {
 	    // optional targets that we do not have in the Release file are skipped
-	    if (hasHashes == true && Target.IsOptional)
+	    if (Target.IsOptional)
 	    {
 	       new CleanupItem(Owner, TransactionManager, Target);
 	       continue;
@@ -1536,6 +1536,12 @@ void pkgAcqMetaClearSig::QueueIndexes(bool const verify)			/*{{{*/
       }
       else
       {
+
+    if (Target.IsOptional)
+    {
+       new CleanupItem(Owner, TransactionManager, Target);
+       continue;
+    }
 	 // if we have no file to patch, no point in trying
 	 trypdiff &= (GetExistingFilename(GetFinalFileNameFromURI(Target.URI)).empty() == false);
       }
