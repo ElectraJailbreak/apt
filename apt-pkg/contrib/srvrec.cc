@@ -11,6 +11,7 @@
 #include <netdb.h>
 
 #include <arpa/nameser.h>
+#include <apt-pkg/nameser_compat.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <resolv.h>

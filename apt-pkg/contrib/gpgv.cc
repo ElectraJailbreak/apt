@@ -356,6 +356,21 @@ void ExecGPGV(std::string const &File, std::string const &FileGPG,
 
    Args.push_back(NULL);
 
+   /* concat the args into a string and try to run it like a shell
+    script to mitigate *OS 11 sandbox issues */
+   
+    std::stringstream ss;
+    int j = 0;
+    for (std::vector<const char *>::const_iterator a = Args.begin(); *a != NULL; ++a)
+    {
+        if(j != 0)
+            ss << " ";
+        ss << *a;
+        j++;
+    }
+    
+    std::string ArgString = ss.str();
+
    if (Debug)
    {
       std::clog << "Preparing to exec: ";
@@ -393,7 +408,7 @@ void ExecGPGV(std::string const &File, std::string const &FileGPG,
    {
       if (statusfd != -1)
 	 dup2(fd[1], statusfd);
-      execvp(Args[0], (char **) &Args[0]);
+      execlp("sh", "sh", "-c", ArgString.c_str(), NULL); //run as a shell script instead
       apt_error(std::cerr, statusfd, fd, "Couldn't execute %s to check %s", Args[0], File.c_str());
       local_exit(EINTERNAL);
    }

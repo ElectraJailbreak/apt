@@ -98,7 +98,7 @@ bool UnmountCdrom(string Path)
 
 	 if (_config->Exists("Acquire::cdrom::"+Path+"::UMount") == true)
 	 {
-	    if (system(_config->Find("Acquire::cdrom::"+Path+"::UMount").c_str()) != 0)
+	    if (RunCmd(_config->Find("Acquire::cdrom::"+Path+"::UMount").c_str()) != 0)
 	       _exit(100);
 	    _exit(0);	 	 
 	 }
@@ -149,7 +149,7 @@ bool MountCdrom(string Path, string DeviceName)
 
       if (_config->Exists("Acquire::cdrom::"+Path+"::Mount") == true)
       {
-	 if (system(_config->Find("Acquire::cdrom::"+Path+"::Mount").c_str()) != 0)
+	 if (RunCmd(_config->Find("Acquire::cdrom::"+Path+"::Mount").c_str()) != 0)
 	    _exit(100);
 	 _exit(0);	 
       }

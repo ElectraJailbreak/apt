@@ -8,10 +8,13 @@ cmake_minimum_required(VERSION 3.4.0)
 include_directories(${PROJECT_BINARY_DIR}/include)
 
 
-enable_testing()
+#enable_testing()
 
-option(WITH_DOC "Build documentation." ON)
+option(WITH_DOC "Build documentation." OFF)
 option(USE_NLS "Localisation support." ON)
+
+INCLUDE_DIRECTORIES(/Users/coolstar/jb/the_memo/skel/usr/include)
+LINK_DIRECTORIES(/Users/coolstar/jb/the_memo/skel/usr/lib)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMake")
 
@@ -76,10 +79,10 @@ if (BERKELEY_DB_FOUND)
   set(HAVE_BDB 1)
 endif()
 
-find_package(GnuTLS REQUIRED)
-if (GNUTLS_FOUND)
-  set(HAVE_GNUTLS 1)
-endif()
+#find_package(GnuTLS REQUIRED)
+#if (GNUTLS_FOUND)
+#  set(HAVE_GNUTLS 1)
+#endif()
 
 # (De)Compressor libraries
 find_package(ZLIB REQUIRED)
@@ -99,10 +102,10 @@ if (LZMA_FOUND)
 endif()
 
 
-find_package(LZ4 REQUIRED)
-if (LZ4_FOUND)
-  set(HAVE_LZ4 1)
-endif()
+#find_package(LZ4 REQUIRED)
+#if (LZ4_FOUND)
+#  set(HAVE_LZ4 1)
+#endif()
 
 find_package(Zstd)
 if (ZSTD_FOUND)
@@ -227,11 +230,11 @@ add_subdirectory(apt-private)
 add_subdirectory(apt-inst)
 add_subdirectory(cmdline)
 add_subdirectory(completions)
-add_subdirectory(doc)
+#add_subdirectory(doc)
 add_subdirectory(dselect)
 add_subdirectory(ftparchive)
-add_subdirectory(methods)
-add_subdirectory(test)
+#add_subdirectory(methods)
+#add_subdirectory(test)
 
 if (USE_NLS)
 add_subdirectory(po)

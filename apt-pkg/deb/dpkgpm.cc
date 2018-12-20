@@ -1714,7 +1714,7 @@ bool pkgDPkgPM::Go(APT::Progress::PackageManager *progress)
    bool dpkgMultiArch = debSystem::SupportsMultiArch();
 
    // start pty magic before the loop
-   StartPtyMagic();
+   //StartPtyMagic(); or not...
 
    // Tell the progress that its starting and fork dpkg
    d->progress->Start(d->master);
@@ -2134,7 +2134,7 @@ bool pkgDPkgPM::Go(APT::Progress::PackageManager *progress)
       }
    }
    // dpkg is done at this point
-   StopPtyMagic();
+   //StopPtyMagic();
    CloseLog();
 
    if (d->dpkg_error.empty() == false)

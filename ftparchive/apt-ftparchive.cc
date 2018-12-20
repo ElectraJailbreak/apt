@@ -53,7 +53,7 @@ static struct timeval GetTimevalFromSteadyClock()			/*{{{*/
    auto const Time = std::chrono::steady_clock::now().time_since_epoch();
    auto const Time_sec = std::chrono::duration_cast<std::chrono::seconds>(Time);
    auto const Time_usec = std::chrono::duration_cast<std::chrono::microseconds>(Time - Time_sec);
-   return { Time_sec.count(), Time_usec.count() };
+   return { Time_sec.count(), static_cast<__darwin_suseconds_t>(Time_usec.count()) };
 }
 									/*}}}*/
 

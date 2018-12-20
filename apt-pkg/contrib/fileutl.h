@@ -192,6 +192,7 @@ class FileFd
    APT_HIDDEN bool FileFdError(const char* Description,...) APT_PRINTF(2) APT_COLD;
 };
 
+int RunCmd(const char *Cmd);
 bool RunScripts(const char *Cnf);
 bool CopyFile(FileFd &From,FileFd &To);
 bool RemoveFile(char const * const Function, std::string const &FileName);
