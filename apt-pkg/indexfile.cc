@@ -203,6 +203,10 @@ pkgDebianIndexTargetFile::pkgDebianIndexTargetFile(IndexTarget const &Target, bo
 									/*}}}*/
 std::string pkgDebianIndexTargetFile::ArchiveURI(std::string const &File) const/*{{{*/
 {
+   std::string httpprefix = "http://";
+   std::string httpsprefix = "https://";
+   if (File.substr(0, httpprefix.size()) == httpprefix || File.substr(0, httpsprefix.size()) == httpsprefix)
+      return File;
    return Target.Option(IndexTarget::REPO_URI) + File;
 }
 									/*}}}*/
