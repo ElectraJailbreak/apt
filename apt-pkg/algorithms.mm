@@ -15,6 +15,9 @@
 // Include Files							/*{{{*/
 #include <config.h>
 
+#define ENABLE_SILEO 1
+#include <Foundation/Foundation.h>
+
 #include <apt-pkg/algorithms.h>
 #include <apt-pkg/configuration.h>
 #include <apt-pkg/depcache.h>
@@ -94,6 +97,37 @@ void pkgSimulate::Describe(PkgIterator Pkg,ostream &out,bool Current,bool Candid
    }
 }
 									/*}}}*/
+// Simulate::DescribeSileo - Describe a package            /*{{{*/
+// ---------------------------------------------------------------------
+/* Parameter Current == true displays the current package version,
+   Parameter Candidate == true displays the candidate package version */
+NSMutableDictionary * pkgSimulate::DescribeSileo(PkgIterator Pkg,bool Current,bool Candidate)
+{
+   VerIterator Ver(Sim);
+
+   NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
+   [dictionary setObject:[NSString stringWithUTF8String:Pkg.FullName(true).c_str()] forKey:@"Package"];
+
+   if (Current == true)
+   {
+      Ver = Pkg.CurrentVer();
+      if (Ver.end() == false){
+         [dictionary setObject:[NSString stringWithUTF8String:Ver.VerStr()] forKey:@"Version"];
+      }
+   }
+
+   if (Candidate == true)
+   {
+      Ver = Sim[Pkg].CandidateVerIter(Sim);
+      if (Ver.end() == true)
+         return dictionary;
+      [dictionary setObject:[NSString stringWithUTF8String:Ver.VerStr()] forKey:@"Version"];
+      [dictionary setObject:[NSString stringWithUTF8String:Ver.RelStr().c_str()] forKey:@"Release"];
+   }
+
+   return dictionary;
+}
+                           /*}}}*/
 // Simulate::Install - Simulate unpacking of a package			/*{{{*/
 // ---------------------------------------------------------------------
 /* */
@@ -106,6 +140,49 @@ bool pkgSimulate::Install(PkgIterator iPkg,string File)
 }
 bool pkgSimulate::RealInstall(PkgIterator iPkg,string /*File*/)
 {
+   bool forSileo = _config->FindB("APT::Format::for-sileo", false);
+   if (forSileo){
+      // Adapt the iterator
+      PkgIterator Pkg = Sim.FindPkg(iPkg.Name(), iPkg.Arch());
+      Flags[Pkg->ID] = 1;
+
+      NSMutableDictionary *package = DescribeSileo(Pkg, true, true);
+      [package setObject:@"Inst" forKey:@"Type"];
+
+      cout << flush;
+
+      NSData *data = [NSJSONSerialization dataWithJSONObject:package options:0 error:nil];
+      NSFileHandle *stdout = [NSFileHandle fileHandleWithStandardOutput];
+      [stdout writeData:data];
+
+      cout << endl;
+
+      Sim.MarkInstall(Pkg,false);
+
+      // Look for broken conflicts+predepends.
+      for (PkgIterator I = Sim.PkgBegin(); I.end() == false; ++I)
+      {
+         if (Sim[I].InstallVer == 0)
+            continue;
+
+         for (DepIterator D = Sim[I].InstVerIter(Sim).DependsList(); D.end() == false;)
+         {
+            DepIterator Start;
+            DepIterator End;
+            D.GlobOr(Start,End);
+            if (Start.IsNegative() == true || End->Type == pkgCache::Dep::PreDepends)
+            {
+               if ((Sim[End] & pkgDepCache::DepGInstall) == 0)
+               {
+                  if (Start->Type == pkgCache::Dep::Conflicts)
+                     _error->Error("Fatal, conflicts violated %s",I.FullName(false).c_str());
+               }     
+            }
+         }      
+      }
+      return true;
+   }
+
    // Adapt the iterator
    PkgIterator Pkg = Sim.FindPkg(iPkg.Name(), iPkg.Arch());
    Flags[Pkg->ID] = 1;
@@ -159,47 +236,51 @@ bool pkgSimulate::Configure(PkgIterator iPkg)
 }
 bool pkgSimulate::RealConfigure(PkgIterator iPkg)
 {
+   bool forSileo = _config->FindB("APT::Format::for-sileo", false);
+
    // Adapt the iterator
    PkgIterator Pkg = Sim.FindPkg(iPkg.Name(), iPkg.Arch());
    
    Flags[Pkg->ID] = 2;
 
-   if (Sim[Pkg].InstBroken() == true)
-   {
-      cout << "Conf " << Pkg.FullName(false) << " broken" << endl;
-
-      Sim.Update();
-      
-      // Print out each package and the failed dependencies
-      for (pkgCache::DepIterator D = Sim[Pkg].InstVerIter(Sim).DependsList(); D.end() == false; ++D)
+   if (!forSileo){
+      if (Sim[Pkg].InstBroken() == true)
       {
-	 if (Sim.IsImportantDep(D) == false || 
-	     (Sim[D] & pkgDepCache::DepInstall) != 0)
-	    continue;
-	 
-	 if (D->Type == pkgCache::Dep::Obsoletes)
-	    cout << " Obsoletes:" << D.TargetPkg().FullName(false);
-	 else if (D->Type == pkgCache::Dep::Conflicts)
-	    cout << " Conflicts:" << D.TargetPkg().FullName(false);
-	 else if (D->Type == pkgCache::Dep::DpkgBreaks)
-	    cout << " Breaks:" << D.TargetPkg().FullName(false);
-	 else
-	    cout << " Depends:" << D.TargetPkg().FullName(false);
-      }	    
-      cout << endl;
+         cout << "Conf " << Pkg.FullName(false) << " broken" << endl;
 
-      _error->Error("Conf Broken %s",Pkg.FullName(false).c_str());
-   }   
-   else
-   {
-      cout << "Conf "; 
-      Describe(Pkg,cout,false,true);
+         Sim.Update();
+         
+         // Print out each package and the failed dependencies
+         for (pkgCache::DepIterator D = Sim[Pkg].InstVerIter(Sim).DependsList(); D.end() == false; ++D)
+         {
+   	 if (Sim.IsImportantDep(D) == false || 
+   	     (Sim[D] & pkgDepCache::DepInstall) != 0)
+   	    continue;
+   	 
+   	 if (D->Type == pkgCache::Dep::Obsoletes)
+   	    cout << " Obsoletes:" << D.TargetPkg().FullName(false);
+   	 else if (D->Type == pkgCache::Dep::Conflicts)
+   	    cout << " Conflicts:" << D.TargetPkg().FullName(false);
+   	 else if (D->Type == pkgCache::Dep::DpkgBreaks)
+   	    cout << " Breaks:" << D.TargetPkg().FullName(false);
+   	 else
+   	    cout << " Depends:" << D.TargetPkg().FullName(false);
+         }	    
+         cout << endl;
+
+         _error->Error("Conf Broken %s",Pkg.FullName(false).c_str());
+      }   
+      else
+      {
+         cout << "Conf "; 
+         Describe(Pkg,cout,false,true);
+      }
+
+      if (Sim.BrokenCount() != 0)
+         ShortBreaks();
+      else
+         cout << endl;
    }
-
-   if (Sim.BrokenCount() != 0)
-      ShortBreaks();
-   else
-      cout << endl;
    
    return true;
 }
@@ -216,6 +297,8 @@ bool pkgSimulate::Remove(PkgIterator iPkg,bool Purge)
 }
 bool pkgSimulate::RealRemove(PkgIterator iPkg,bool Purge)
 {
+   bool forSileo = _config->FindB("APT::Format::for-sileo", false);
+
    // Adapt the iterator
    PkgIterator Pkg = Sim.FindPkg(iPkg.Name(), iPkg.Arch());
    if (Pkg.end() == true)
@@ -227,16 +310,32 @@ bool pkgSimulate::RealRemove(PkgIterator iPkg,bool Purge)
    Flags[Pkg->ID] = 3;
    Sim.MarkDelete(Pkg);
 
-   if (Purge == true)
-      cout << "Purg ";
-   else
-      cout << "Remv ";
-   Describe(Pkg,cout,true,false);
+   if (forSileo){
+      NSMutableDictionary *package = DescribeSileo(Pkg, true, false);
+      if (Purge == true)
+         [package setObject:@"Purg" forKey:@"Type"];
+      else
+         [package setObject:@"Remv" forKey:@"Type"];
 
-   if (Sim.BrokenCount() != 0)
-      ShortBreaks();
-   else
+      cout << flush;
+
+      NSData *data = [NSJSONSerialization dataWithJSONObject:package options:0 error:nil];
+      NSFileHandle *stdout = [NSFileHandle fileHandleWithStandardOutput];
+      [stdout writeData:data];
+
       cout << endl;
+   } else {
+      if (Purge == true)
+         cout << "Purg ";
+      else
+         cout << "Remv ";
+      Describe(Pkg,cout,true,false);
+
+      if (Sim.BrokenCount() != 0)
+         ShortBreaks();
+      else
+         cout << endl;
+   }
 
    return true;
 }

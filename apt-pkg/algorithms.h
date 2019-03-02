@@ -87,6 +87,9 @@ public:
 private:
    APT_HIDDEN void ShortBreaks();
    APT_HIDDEN void Describe(PkgIterator iPkg,std::ostream &out,bool Current,bool Candidate);
+#if ENABLE_SILEO
+   APT_HIDDEN NSMutableDictionary * DescribeSileo(PkgIterator iPkg,bool Current,bool Candidate);
+#endif
    APT_HIDDEN bool RealInstall(PkgIterator Pkg,std::string File);
    APT_HIDDEN bool RealConfigure(PkgIterator Pkg);
    APT_HIDDEN bool RealRemove(PkgIterator Pkg,bool Purge);
