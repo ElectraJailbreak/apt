@@ -233,7 +233,7 @@ add_subdirectory(completions)
 #add_subdirectory(doc)
 add_subdirectory(dselect)
 add_subdirectory(ftparchive)
-#add_subdirectory(methods)
+add_subdirectory(methods)
 #add_subdirectory(test)
 
 if (USE_NLS)
