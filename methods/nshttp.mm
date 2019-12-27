@@ -82,6 +82,7 @@ bool HttpMethod::Fetch(FetchItem *Itm)
    Res.IMSHit = false;
 
    __block BOOL success = NO;
+   __block BOOL proceed = NO;
 
    dispatch_semaphore_t sem = dispatch_semaphore_create(0);
 
@@ -89,7 +90,21 @@ bool HttpMethod::Fetch(FetchItem *Itm)
    [request setHTTPMethod:@"HEAD"];
    [[[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData *, NSURLResponse *response, NSError *error){
       NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
-      if (httpResponse.statusCode >= 200){
+      if (error != nil) {
+         if ([error localizedDescription] != nil) {
+            Fail(std::string([error localizedDescription].UTF8String));
+         } else {
+            Fail();
+         }
+      } else if (httpResponse.statusCode == 304) {
+         Res.IMSHit = true;
+         Res.LastModified = Itm->LastModified;
+         URIDone(Res);
+         success = YES;
+      } else if (httpResponse.statusCode < 200 || httpResponse.statusCode >= 400) {
+         Fail(std::string([NSString stringWithFormat:@"HTTP %li", (long)httpResponse.statusCode].UTF8String));
+         success = YES;
+      } else {
          if (httpResponse.expectedContentLength != NSURLResponseUnknownLength)
             Res.Size = httpResponse.expectedContentLength;
          NSString *dateModified = httpResponse.allHeaderFields[@"Date"];
@@ -102,8 +117,7 @@ bool HttpMethod::Fetch(FetchItem *Itm)
             [formatter release];
          }
          success = YES;
-      } else {
-         success = NO;
+         proceed = YES;
       }
       dispatch_semaphore_signal(sem);
    }] resume];
@@ -112,9 +126,9 @@ bool HttpMethod::Fetch(FetchItem *Itm)
    dispatch_semaphore_wait(sem, dispatch_time(DISPATCH_TIME_NOW, TimeOut * NSEC_PER_SEC));
 
    // Get the files information
-   if (!success)
+   if (!proceed)
    {
-      return false;
+      return success;
    }
 
    // See if it is an IMS hit
@@ -146,8 +160,6 @@ bool HttpMethod::Fetch(FetchItem *Itm)
    {
       [request setHTTPMethod:@"GET"];
 
-      success = NO;
-
       NSURLSessionDownloadTask *task = [[NSURLSession sharedSession] downloadTaskWithRequest:request completionHandler:^(NSURL *location, NSURLResponse *response, NSError *error){
          NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
          if (httpResponse.statusCode == 200 && !error){
@@ -164,7 +176,7 @@ bool HttpMethod::Fetch(FetchItem *Itm)
       dispatch_semaphore_wait(sem, dispatch_time(DISPATCH_TIME_NOW, TimeOut * NSEC_PER_SEC));
 
       if (!success){
-         Fail(true);
+         Fail();
          return true;
       }
 
