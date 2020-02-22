@@ -28,8 +28,59 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <dlfcn.h>
+#include <Foundation/Foundation.h>
+#include <sys/types.h>
+#include <sys/sysctl.h>
 
 #include <apti18n.h>
+
+extern "C" NSDictionary *_CFCopyServerVersionDictionary();
+
+@interface NSDevice : NSObject
++ (NSString *)_uniqueIdentifier;
++ (NSString *)_platform;
++ (NSString *)_kernOSType;
++ (NSString *)_kernOSRelease;
++ (NSUUID *)_uniqueIdentifierUUID;
+@end
+
+@implementation NSDevice
+
++ (NSString *)_uniqueIdentifier {
+    void *gestalt = dlopen("/usr/lib/libMobileGestalt.dylib", RTLD_GLOBAL | RTLD_LAZY);
+    CFStringRef (*MGCopyAnswer)(CFStringRef) = (CFStringRef (*)(CFStringRef))(dlsym(gestalt, "MGCopyAnswer"));
+    return CFBridgingRelease(MGCopyAnswer(CFSTR("UniqueDeviceID")));
+}
+
++ (NSString *)_platform {
+    size_t size;
+    sysctlbyname("hw.machine", NULL, &size, NULL, 0);
+    char *machine = (char *)malloc(size);
+    sysctlbyname("hw.machine", machine, &size, NULL, 0);
+    return [NSString stringWithCString:machine encoding:NSUTF8StringEncoding];
+}
+
++ (NSString *)_kernOSType {
+    char ostype[256];
+    size_t size = sizeof(ostype);
+    sysctlbyname("kern.ostype", ostype, &size, NULL, 0);
+    return [NSString stringWithUTF8String:ostype];
+}
+
++ (NSString *)_kernOSRelease {
+    char osrelease[256];
+    size_t size = sizeof(osrelease);
+    sysctlbyname("kern.osrelease", osrelease, &size, NULL, 0);
+    return [NSString stringWithUTF8String:osrelease];
+}
+
++ (NSString *)systemVersion {
+   NSDictionary *dict = _CFCopyServerVersionDictionary();
+   return [dict objectForKey:@"ProductVersion"];
+}
+
+@end
 
 unsigned long TimeOut = 30;
 Configuration::Item const *HttpOptions = 0;
@@ -88,6 +139,14 @@ bool HttpMethod::Fetch(FetchItem *Itm)
 
    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:URL cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData timeoutInterval:TimeOut];
    [request setHTTPMethod:@"HEAD"];
+
+   NSString *cfnetworkVersion = [NSBundle bundleWithIdentifier:@"com.apple.CFNetwork"].infoDictionary[(NSString *)kCFBundleVersionKey];
+   [request setValue:[NSString stringWithFormat:@"%@/%@ %@/%@ %@/%@", NSBundle.mainBundle.infoDictionary[(NSString *)kCFBundleNameKey], [NSBundle mainBundle].infoDictionary[(NSString *)kCFBundleVersionKey], @"CFNetwork", cfnetworkVersion, [NSDevice _kernOSType], [NSDevice _kernOSRelease]] forHTTPHeaderField:@"User-Agent"];
+
+   [request setValue:[NSDevice _platform] forHTTPHeaderField:@"X-Machine"];
+   [request setValue:[NSDevice _uniqueIdentifier] forHTTPHeaderField:@"X-Unique-ID"];
+   [request setValue:[NSDevice systemVersion] forHTTPHeaderField:@"X-Firmware"];
+
    [[[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData *, NSURLResponse *response, NSError *error){
       NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
       if (error != nil) {
